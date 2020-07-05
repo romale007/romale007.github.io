@@ -2,6 +2,8 @@
  
 let audioCtx;
 
+// Запуск осцилятора кнопкой (чтобы не выходило предупреждение)
+
 let on = document.querySelector('#onBtn');
 
 on.onclick = function () {
@@ -9,9 +11,8 @@ on.onclick = function () {
   on.setAttribute('disabled', 'disabled');
 }  
 
-AudioContext = window.AudioContext || window.webkitAudioContext; // обращаемся к глобальному аудио контексту
 
-audioCtx = new AudioContext();
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 const oscillator = audioCtx.createOscillator(); // создаём в контексте: узел осцилятора 
 const gainNode = audioCtx.createGain();         // создаём в контексте: узел усилителя
@@ -27,26 +28,27 @@ gainNode.gain.value = 0.1; // задаём уровень громкости (10
 
 
 class Note {
-    constructor(freq, name) {
+    constructor(freq, name, keyCode) {
         this.freq = freq;
         this.name = name;
+        this.keyCode = keyCode;
     }
 }
 // создаём объекты - Ноты
 
 
-const C4 = new Note(261.63, "C4");
-const Db4 = new Note(277.18, "C#4");
-const D4 = new Note(293.66, "D4");
-const Eb4 = new Note(311.13, "D#4");
-const E4 = new Note(329.63, "E4");
-const F4 = new Note(349.23, "F4");
-const Gb4 = new Note(369.99, "F#4");
-const G4 = new Note(392.00, "G4");
-const Ab4 = new Note(415.30, "G#4");
-const A4 = new Note(440.00, "A4");
-const Bb4 = new Note(466.16, "A#4");
-const B4 = new Note(493.88, "B4");
+const C4 = new Note(261.63, "C4", "KeyQ");
+const Db4 = new Note(277.18, "C#4", "Digit2");
+const D4 = new Note(293.66, "D4", "KeyW");
+const Eb4 = new Note(311.13, "D#4", "Digit3");
+const E4 = new Note(329.63, "E4", "KeyE");
+const F4 = new Note(349.23, "F4", "KeyR");
+const Gb4 = new Note(369.99, "F#4", "Digit5");
+const G4 = new Note(392.00, "G4", "KeyT");
+const Ab4 = new Note(415.30, "G#4", "Digit6");
+const A4 = new Note(440.00, "A4", "KeyY");
+const Bb4 = new Note(466.16, "A#4", "Digit7");
+const B4 = new Note(493.88, "B4", "KeyU");
 
 
 
@@ -61,6 +63,7 @@ let blackNotesFrequencies = [Db4.freq, Eb4.freq, 0, Gb4.freq, Ab4.freq, Bb4.freq
 let whiteNotesNames = [C4.name, D4.name, E4.name, F4.name, G4.name, A4.name, B4.name];
 
 let blackNotesNames = [Db4.name, Eb4.name, 0, Gb4.name, Ab4.name, Bb4.name];
+
 
 
 //рисуем клавиши c помощью цикла
@@ -89,63 +92,124 @@ function draw() {
     
     box.innerHTML = html;
 
-
-    document.querySelectorAll('.whitenotes').forEach(function(element) {  
-        element.onmouseup = function () {
-            if(audioCtx.state ==='running') {
-                  audioCtx.suspend().then(function(){
-                  console.log("suspend") ; 
-                });
-          };
-      }       
-        element.onmousedown = function(){
-                
-            if (audioCtx.state ==='suspended') {
-                  audioCtx.resume();
-                  oscillator.frequency.value = this.dataset.note;
-                  event.stopPropagation(); 
+    document.querySelectorAll('.whitenotes, .blacknotes').forEach(function(element) {  
+      let mouseBtnPressed;
+      /*function startPlay () {
+        if (audioCtx.state ==='suspended') {
+          audioCtx.resume();
+          oscillator.frequency.value = this.dataset.note;
+          //event.stopPropagation(); 
         }
-      }   
-      element.onmouseleave = function () {
+      }*/
+      
+      /*
+      function stopPlay () {
         if(audioCtx.state ==='running') {
-              audioCtx.suspend().then(function(){
-              console.log("suspend") ; 
+            audioCtx.suspend().then(function(){
+            console.log("suspend") ; 
+          });
+        }
+      }
+      */
+        element.ontouch = function () {
+          //event.stopPropagation(); 
+          if (audioCtx.state ==='suspended') {
+            audioCtx.resume();
+            oscillator.frequency.value = this.dataset.note;
+          }  
+        };
+        
+        element.ontouchend = function () {
+          mouseBtnPressed = true;
+          if(audioCtx.state ==='running') {
+            audioCtx.suspend().then(function(){
+            console.log("suspend") ; 
+           });
+          } 
+        };
+
+        element.onmousedown = function () {
+          mouseBtnPressed = true;
+          event.stopPropagation(); 
+          if (audioCtx.state ==='suspended') {
+            audioCtx.resume();
+            oscillator.frequency.value = this.dataset.note;
+          }  
+        };
+        element.onmouseup = function () {
+          mouseBtnPressed = false;
+          if(audioCtx.state ==='running') {
+            audioCtx.suspend().then(function(){
+            console.log("suspend") ; 
+           });
+          }
+        };
+      
+        element.onmouseout = function () {
+          if(audioCtx.state ==='running') {
+            audioCtx.suspend().then(function(){
+            console.log("suspend") ; 
             });
-      };
-  }            
+          }
+        };
+
+
+
+      /*  element.onmouseover = function () {
+          if (mouseBtnPressed == true) {
+            audioCtx.resume();
+            oscillator.frequency.value = this.dataset.note;
+          } 
+        };*/
+        
+          
   });
 
-       document.querySelectorAll('.blacknotes').forEach(function(element) {
-        element.onmouseup = function () {
-            if(audioCtx.state ==='running') {
-                  audioCtx.suspend().then(function(){
-                  console.log("suspend") ; 
-                });
-        };
-    }       
-        element.onmousedown = function(){
-            if (audioCtx.state ==='suspended') {
-                 audioCtx.resume();
-                 oscillator.frequency.value = this.dataset.note;
-                 event.stopPropagation(); 
+    
+   // let doNota = document.querySelector(`.whitenotes[data="${D4.freq}"]`);
+
+      document.addEventListener('keydown', function(event){
+        switch (event.code) {
+          case C4.keyCode : audioCtx.resume(); oscillator.frequency.value = C4.freq;
+            break;
+          case Db4.keyCode : audioCtx.resume(); oscillator.frequency.value = Db4.freq;
+            break;
+          case D4.keyCode : audioCtx.resume(); oscillator.frequency.value = D4.freq;
+            break;
+          case Eb4.keyCode : audioCtx.resume(); oscillator.frequency.value = Eb4.freq;
+            break;
+          case E4.keyCode : audioCtx.resume(); oscillator.frequency.value = E4.freq;
+            break;
+          case F4.keyCode : audioCtx.resume(); oscillator.frequency.value = F4.freq;
+            break;
+          case Gb4.keyCode : audioCtx.resume(); oscillator.frequency.value = Gb4.freq;
+            break;
+          case G4.keyCode : audioCtx.resume(); oscillator.frequency.value = G4.freq;
+            break;
+          case Ab4.keyCode : audioCtx.resume(); oscillator.frequency.value = Ab4.freq;
+            break;
+          case A4.keyCode : audioCtx.resume(); oscillator.frequency.value = A4.freq;
+            break; 
+          case B4.keyCode : audioCtx.resume(); oscillator.frequency.value = B4.freq;
+            break;
+          default : audioCtx.suspend();
         }
-    }   
-        element.onmouseleave = function () {
-            if(audioCtx.state ==='running') {
-                audioCtx.suspend().then(function(){
-                console.log("suspend") ; 
-              });
-      };
-  }        
   });
+      document.addEventListener('keyup', function(event){
+        audioCtx.suspend();
+  });
+        //console.log(1);
+       // audioCtx.resume();
+        //oscillator.frequency.value = C4.freq;
+    
+      //document.addEventListener('keyup', function(event){
+      //  audioCtx.suspend();
+     // });
+
+
 }   
 
-
-
 draw();
-
-
-
 
 
 btn.onmousedown = function () {  //
@@ -164,43 +228,4 @@ stopBtn.onclick = function () {
         stopBtn.setAttribute('disabled', 'disabled')
     })
 }
-
-
-//function noteDown(elem){
- //   let currentNote = elem.dataset.note;
- //   alert(currentNote);
-//}
-
-
-//здесь пока всё играет
-
-
-
-    /*
-    let doNota = document.querySelector(`.whitenotes[data="${C4.freq}"]`);
-
-    
-
-      document.addEventListener('keypress', function(event){
-       
-        if (event.code == 'KeyQ')
-        console.log(1);
-        
-     });
-      document.addEventListener('keyup', function(event){
-        Play.stop();
-      });
-*/
-
-
-
-
-
-
-
-
-
-
-
-
 
