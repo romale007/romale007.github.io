@@ -11,6 +11,7 @@
     position: relative;
     height: 100%;
     width: 50px;
+   
 }
 
 .blacknotes {
@@ -26,4 +27,3 @@
 .active {
     background-color: goldenrod;
 }
-
