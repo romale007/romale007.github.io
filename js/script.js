@@ -1,31 +1,46 @@
 "use strict";
  
-let audioCtx;
 
-// Запуск осцилятора кнопкой (чтобы не выходило предупреждение)
+var AudioContext = window.AudioContext || window.webkitAudioContext; // обращаемся к глобальному аудио контексту
 
-let on = document.querySelector('#onBtn');
+let audioCtx = new AudioContext();   
 
-on.onclick = function () {
-  oscillator.start(0);
-  on.setAttribute('disabled', 'disabled');
-}  
+let osciStop = function () {
+    audioCtx.oscillator.stop();
+}
 
+class Sound { 
+                                  // Создаём класс , который каждый раз будет обращаться к глобальному контексту    
+    
+    constructor(audioCtx) {
+        
+        this.audioCtx = audioCtx;  
+     
+    }
+    init() {                                          // создаём фунцию, которая будет каждое нажатие создавать цепь осцилятор-усилитель-выход      
+        this.oscillator = audioCtx.createOscillator(); // создаём в контексте: узел осцилятора 
+        this.gainNode = audioCtx.createGain();         // создаём в контексте: узел усилителя
 
-audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.oscillator.connect(this.gainNode);          // втыкаем осцилятор в усилитель
+        this.gainNode.connect(this.audioCtx.destination); // втыкаем усилитель в устройство вывода
 
-const oscillator = audioCtx.createOscillator(); // создаём в контексте: узел осцилятора 
-const gainNode = audioCtx.createGain();         // создаём в контексте: узел усилителя
+        this.oscillator.type = 'sine';                   // задаём форму осцилятора (синус самый мягкий по звучанию)
+        this.gainNode.gain.setValueAtTime(0.1, this.audioCtx.currentTime); // задаём уровень громкости (50%) и время запуска (сразу)
+    }
+    play(freq) {                                        //создаём функцию, которая будет запускать осцилятор, два параметра - частота и время запуска
+        this.init();                                    // создаёт цепь  "осцилятор-усилитель-выход" и форму осцилятора 
+        this.oscillator.frequency.value = freq;           // присваивает свойству oscillator.frequency.freq значение переменной freq  
+        this.oscillator.start();                          // запускаем
+    }
+    stop() {                                            // останавливаем 
+        
+        this.oscillator.stop ();
+         
+    }
 
-oscillator.connect(gainNode);          // втыкаем осцилятор в усилитель
-gainNode.connect(audioCtx.destination); // втыкаем усилитель в устройство вывода
+}
 
-oscillator.type = 'sine';                   // задаём форму осцилятора (синус самый мягкий по звучанию)
-oscillator.frequency.value = 0;           // присваивает свойству oscillator.frequency.freq значение переменной freq  
-//oscillator.start(0);                          // запускаем
-
-gainNode.gain.value = 0.1; // задаём уровень громкости (10%)  
-
+// создаём класс Нота, свойство - частота (Гц)
 
 class Note {
     constructor(freq, name, keyCode) {
@@ -44,18 +59,18 @@ class Note {
 // создаём объекты - Ноты
 
 
-const C4 = new Note(261.63, "C4", "KeyQ");
-const Db4 = new Note(277.18, "C#4", "Digit2");
-const D4 = new Note(293.66, "D4", "KeyW");
-const Eb4 = new Note(311.13, "D#4", "Digit3");
-const E4 = new Note(329.63, "E4", "KeyE");
-const F4 = new Note(349.23, "F4", "KeyR");
-const Gb4 = new Note(369.99, "F#4", "Digit5");
-const G4 = new Note(392.00, "G4", "KeyT");
-const Ab4 = new Note(415.30, "G#4", "Digit6");
-const A4 = new Note(440.00, "A4", "KeyY");
-const Bb4 = new Note(466.16, "A#4", "Digit7");
-const B4 = new Note(493.88, "B4", "KeyU");
+const C4 = new Note(261.63, "Q", "KeyQ");
+const Db4 = new Note(277.18, "2", "Digit2");
+const D4 = new Note(293.66, "W", "KeyW");
+const Eb4 = new Note(311.13, "3", "Digit3");
+const E4 = new Note(329.63, "E", "KeyE");
+const F4 = new Note(349.23, "R", "KeyR");
+const Gb4 = new Note(369.99, "5", "Digit5");
+const G4 = new Note(392.00, "T", "KeyT");
+const Ab4 = new Note(415.30, "6", "Digit6");
+const A4 = new Note(440.00, "Y", "KeyY");
+const Bb4 = new Note(466.16, "7", "Digit7");
+const B4 = new Note(493.88, "U", "KeyU");
 
 
 
@@ -76,155 +91,240 @@ let whiteNotesKeys = [C4.keyCode, D4.keyCode, E4.keyCode, F4.keyCode, G4.keyCode
 let blackNotesKeys = [Db4.keyCode, Eb4.keyCode, 0, Gb4.keyCode, Ab4.keyCode, Bb4.keyCode];
 
 
-
 //рисуем клавиши c помощью цикла
 
-function draw() {
-    
-  let html = "";
-  let box = document.querySelector('#box');
-
+function draw() {                    
+    let html = "";
+    let box = document.querySelector('#box');
     for (let i = 0; i < whiteNotesFrequencies.length; i++) {
         
-      let flag = true;
-      let note = whiteNotesFrequencies[i];
+        let flag = true;
+        let note = whiteNotesFrequencies[i];
 
         if (note == 329.63 || note == 493.88) 
         flag = false;
-        // через dataset назначаем клавишам-нотам их частоты и keyCode из массивов     
-          html +=`<div  class = "whitenotes" data-freq='${whiteNotesFrequencies[i]}' data-key='${whiteNotesKeys[i]}'>`;                
+        // через dataset назначаем клавишам-нотам их частоты из массивов     
+        html +=`<div  class = "whitenotes" data-freq='${whiteNotesFrequencies[i]}' data-key='${whiteNotesKeys[i]}'>`;                
         
         if (flag) {
-          html +=`<div  class = "blacknotes" data-freq='${blackNotesFrequencies[i]}' data-key='${blackNotesKeys[i]}'></div>`;
-      }
+        html +=`<div  class = "blacknotes" data-freq='${blackNotesFrequencies[i]}' data-key='${blackNotesKeys[i]}'></div>`;
+    }
 
         html +='</div>';
     }
     
     box.innerHTML = html;
-    // связываем элементы с событиями
-    document.querySelectorAll('.whitenotes, .blacknotes').forEach(function(element) {  
+
+    let btnPressed;
+   
+
+    document.querySelectorAll('.whitenotes, .blacknotes').forEach(function(element) {
+    
+        element.onmousedown = function (event) {
+        element.classList.add('active');
+        btnPressed = true;
+       // if (audioCtx.state ==='stopped') 
+        console.log(element.dataset.freq + " play");
+        event.stopPropagation();   
+        Play.play(this.dataset.freq);
+       
+    };
+
+    element.onmouseup = function (event) {
+        btnPressed = false;
+        element.classList.remove('active');
+
+        if(audioCtx.state ==='running') {
+        event.stopPropagation();
+        console.log(element.dataset.freq + " stop");
+        Play.stop();
+        } 
+        // else if (audioCtx.state ==='stopped') {
+        //   osciStop();
+        // }
+        //audioCtx.suspend();
+    };
+
+    element.onmouseout = function (event) {     
+          
+        if(btnPressed == true){
+        //event.stopPropagation();
+        element.classList.remove('active');  
+        console.log(element.dataset.freq + " stop"); 
+        Play.stop();
+        }else if (btnPressed == false) {
+            Play.stop();  
+        }
+      };
+    
+
+    element.onmouseover = function (event) {
         
-        let btnPressed;  // позже задействую
+        if(btnPressed == true) {
+        element.classList.add('active');
+        event.stopPropagation(); 
+        Play.play(this.dataset.freq)
+        console.log(element.dataset.freq + " play");
+        } else if (btnPressed == false) {
+            Play.stop();  
+        }
+    };
 
 
-        element.onmousedown = function () {
-          btnPressed = true;
-          event.stopPropagation();
-            audioCtx.resume();
-            oscillator.frequency.value = this.dataset.freq; 
-        };
-        element.onmouseup = function () {
-          btnPressed = false;
-          if(audioCtx.state ==='running') {
-            audioCtx.suspend().then(function(){
-            console.log("suspend") ; 
-           });
-          }
-        };
-      
-        element.onmouseout = function () {
-          if(audioCtx.state ==='running') {
-            audioCtx.suspend().then(function(){
-            console.log("suspend") ; 
-            });
-          }
-        };
-
-       /* element.ontouch = function () {
-          //event.stopPropagation(); 
-          if (audioCtx.state ==='suspended') {
-            audioCtx.resume();
-            oscillator.frequency.value = this.dataset.freq;
-          }  
-        };
-        
-        element.ontouchend = function () {
-          btnPressed = true;
-          if(audioCtx.state ==='running') {
-            audioCtx.suspend().then(function(){
-            console.log("suspend") ; 
-           });
-          } 
-        };*/
+    // element.onmousemove = function () {
+    //     if(btnPressed == false) 
+    //      Play.stop(element.dataset.freq);
+    //         //audioCtx.close();
+    //     }
      
-  });
-  
-        // ВЫДЕЛЕНИЕ ПРИ НАЖАТИИ КЛАВИШ qwerty
-        function activePress () {
+     
+    });
+
+       // ВЫДЕЛЕНИЕ ПРИ НАЖАТИИ КЛАВИШ qwerty
+       function activePress () {
         document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]').classList.add('active');
       }
-
+      
       function removeActivePress () {
         document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]').classList.remove('active');
       }
 
 
+
+
       document.addEventListener('keydown', function(event){
         switch (event.code) {
-          case C4.keyCode : audioCtx.resume(); oscillator.frequency.value = C4.freq;
+          case C4.keyCode : Play.play(C4.freq);
           activePress();
             break;
-          case Db4.keyCode : audioCtx.resume(); oscillator.frequency.value = Db4.freq;
+          case Db4.keyCode : Play.play(Db4.freq);
           activePress();
             break;
-          case D4.keyCode : audioCtx.resume(); oscillator.frequency.value = D4.freq;
+          case D4.keyCode : Play.play(D4.freq);
           activePress();
             break;
-          case Eb4.keyCode : audioCtx.resume(); oscillator.frequency.value = Eb4.freq;
+          case Eb4.keyCode : Play.play(Eb4.freq);
           activePress();
             break;
-          case E4.keyCode : audioCtx.resume(); oscillator.frequency.value = E4.freq;
+          case E4.keyCode : Play.play(E4.freq);
           activePress();
             break;
-          case F4.keyCode : audioCtx.resume(); oscillator.frequency.value = F4.freq;
+          case F4.keyCode : Play.play(F4.freq);
           activePress();
             break;
-          case Gb4.keyCode : audioCtx.resume(); oscillator.frequency.value = Gb4.freq;
+          case Gb4.keyCode : Play.play(Gb4.freq);
           activePress();
             break;
-          case G4.keyCode : audioCtx.resume(); oscillator.frequency.value = G4.freq;
+          case G4.keyCode : Play.play(G4.freq);
           activePress();
             break;
-          case Ab4.keyCode : audioCtx.resume(); oscillator.frequency.value = Ab4.freq;
+          case Ab4.keyCode : Play.play(Ab4.freq);
           activePress();
             break;
-          case A4.keyCode : audioCtx.resume(); oscillator.frequency.value = A4.freq;
+          case A4.keyCode : Play.play(A4.freq);
           activePress();
             break; 
-          case B4.keyCode : audioCtx.resume(); oscillator.frequency.value = B4.freq;
+          case B4.keyCode : Play.play(B4.freq);
           activePress();
             break;
-          default : audioCtx.suspend();
+          default : Play.stop();
         }
   });
-      document.addEventListener('keyup', function(event){
+      document.addEventListener('keyup', function(event){1        
         removeActivePress();
-        
-        if(audioCtx.state ==='running'){
-        audioCtx.suspend();
-      }
+        console.log(event.code)
+        //if(audioCtx.state ==='running'){
+        Play.stop();
+      //}
   });
 
 
-} 
+   
+}     
+ 
+draw(); 
+      //попытка "поймать" ошибку
+      // try {
+      //   removeActivePress ();
+      // } catch(err) {
+      //   console.log(err);
+      // }
 
-draw();
+  let Play = new Sound(audioCtx); // создаём объект
 
 
-btn.onmousedown = function () {  //
-    D4.play();
-};
+// function playNow(){
 
-btn.onmouseup = function () {
-    if(audioCtx.state ==='running') {
-        audioCtx.suspend();
-    } 
-};
 
-stopBtn.onclick = function () {
-    audioCtx.close().then(function (){
-        stopBtn.setAttribute('disabled', 'disabled')
-    })
-};
+//     Play.play(this.dataset.note);   // берет частоту из dataset элемента
+//     event.stopPropagation();        
+//     //localStorage.setItem(`currentFreq`, `${this.dataset.note}`);
+// }
+
+// function stopNow(){
+
+    
+//     Play.stop();
+    
+
+// }
+
+
+    //тест - кнопка
+    btn.onmousedown = function () {  //
+    Play.play(Gb4.freq);
+    }
+    btn.onmouseup = function () {
+    Play.stop();
+    }
+
+
+    
+function playDo() {
+    
+    let x = this.dataset.freq;
+    
+    console.log(x);
+}
+
+
+
+
+//function noteDown(elem){
+ //   let currentNote = elem.dataset.note;
+ //   alert(currentNote);
+//}
+
+
+//здесь пока всё играет
+
+
+
+    /*
+    let doNota = document.querySelector(`.whitenotes[data="${C4.freq}"]`);
+
+    
+
+      document.addEventListener('keypress', function(event){
+       
+        if (event.code == 'KeyQ')
+        console.log(1);
+        
+     });
+      document.addEventListener('keyup', function(event){
+        Play.stop();
+      });
+*/
+
+
+
+
+
+
+
+
+
+
+
+
 
