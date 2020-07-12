@@ -50,21 +50,41 @@ const A4 = new Note(440.00, "Y", "KeyY");
 const Bb4 = new Note(466.16, "7", "Digit7");
 const B4 = new Note(493.88, "U", "KeyU");
 
+const C5 = new Note(523.25, "V", "KeyV");   
+const Db5 = new Note(554.37, "G", "KeyG");
+const D5 = new Note(587.33, "B", "KeyB");
+const Eb5 = new Note(622.25, "H", "KeyH");
+const E5 = new Note(659.26, "N", "KeyN");
+const F5 = new Note(698.46, "M", "KeyM");
+const Gb5 = new Note(739.99, "K", "KeyK");
+const G5 = new Note(783.99 , "<", "Comma");
+const Ab5 = new Note(830.61 , "L", "KeyL");
+const A5 = new Note(880.00, ">", "Period");
+const Bb5 = new Note(932.33, ";", "Semicolon");
+const B5 = new Note(987.77, "/", "Slash");
+
+
 
 
 // Создаём массив с частотами нот
 
-let whiteNotesFrequencies = [C4.freq, D4.freq, E4.freq, F4.freq, G4.freq, A4.freq, B4.freq];
+let whiteNotesFrequencies = [C4.freq, D4.freq, E4.freq, F4.freq, G4.freq, A4.freq, B4.freq,
+                             C5.freq, D5.freq, E5.freq, F5.freq, G5.freq, A5.freq, B5.freq,];
 
-let blackNotesFrequencies = [Db4.freq, Eb4.freq, 0, Gb4.freq, Ab4.freq, Bb4.freq];
+let blackNotesFrequencies = [Db4.freq, Eb4.freq, 0, Gb4.freq, Ab4.freq, Bb4.freq, 0,
+                            Db5.freq, Eb5.freq, 0, Gb5.freq, Ab5.freq, Bb5.freq,];
 
-let whiteNotesNames = [C4.name, D4.name, E4.name, F4.name, G4.name, A4.name, B4.name];
+let whiteNotesNames = [C4.name, D4.name, E4.name, F4.name, G4.name, A4.name, B4.name,
+                       C5.name, D5.name, E5.name, F5.name, G5.name, A5.name, B5.name,];
 
-let blackNotesNames = [Db4.name, Eb4.name, 0, Gb4.name, Ab4.name, Bb4.name];
+let blackNotesNames = [Db4.name, Eb4.name, 0, Gb4.name, Ab4.name, Bb4.name, 0,
+                       Db5.name, Eb5.name, 0, Gb5.name, Ab5.name, Bb5.name,];
 
-let whiteNotesKeys = [C4.keyCode, D4.keyCode, E4.keyCode, F4.keyCode, G4.keyCode, A4.keyCode, B4.keyCode];
+let whiteNotesKeys = [C4.keyCode, D4.keyCode, E4.keyCode, F4.keyCode, G4.keyCode, A4.keyCode, B4.keyCode,
+                      C5.keyCode, D5.keyCode, E5.keyCode, F5.keyCode, G5.keyCode, A5.keyCode, B5.keyCode,];
 
-let blackNotesKeys = [Db4.keyCode, Eb4.keyCode, 0, Gb4.keyCode, Ab4.keyCode, Bb4.keyCode];
+let blackNotesKeys = [Db4.keyCode, Eb4.keyCode, 0, Gb4.keyCode, Ab4.keyCode, Bb4.keyCode, 0,
+                      Db5.keyCode, Eb5.keyCode, 0, Gb5.keyCode, Ab5.keyCode, Bb5.keyCode,];
 
 
 //рисуем клавиши c помощью цикла
@@ -77,7 +97,7 @@ function draw() {
         let flag = true;
         let noteFreq = whiteNotesFrequencies[i];
 
-        if (noteFreq == 329.63 || noteFreq == 493.88) 
+        if (noteFreq == 329.63 || noteFreq == 493.88 || noteFreq == 659.26 || noteFreq == 987.77) 
         flag = false;
         // через dataset назначаем клавишам-нотам их частоты из массивов     
         html +=`<div  class = "whitenotes" data-freq='${whiteNotesFrequencies[i]}' data-key='${whiteNotesKeys[i]}'>`;                
