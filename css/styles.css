@@ -9,14 +9,16 @@
     border: 1px solid black;
     float: left;
     position: relative;
-    height: 100%;
+    height: 130%;
     width: 70px;
+  
+    
    
 }
 
 .blacknotes {
     position: absolute;
-    height: 65%;
+    height: 60%;
     width: 60%;
     background-color: teal;
     z-index: 1;
