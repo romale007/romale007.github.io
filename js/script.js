@@ -8,28 +8,12 @@ let audioCtx = new AudioContext();
 let oscList = [];
 
 
-
-    //тест - кнопка
-    // btn.onmousedown = function () {  //
-    //   playTone (440);
-    // }
-    // btn.onmouseup = function () {
-    //  osc.stop();
-    // }
-
-
-
-
-
-
-
-
-// создаём класс Нота, свойство - частота (Гц)
+// создаём класс Нота, свойствa - частота (Гц), 
 
 class Note {
-    constructor(freq, name, keyCode) {
+    constructor(freq, keyName, keyCode) {
         this.freq = freq;
-        this.name = name;
+        this.keyName = keyName;
         this.keyCode = keyCode;
     }
 
@@ -74,11 +58,11 @@ let whiteNotesFrequencies = [C4.freq, D4.freq, E4.freq, F4.freq, G4.freq, A4.fre
 let blackNotesFrequencies = [Db4.freq, Eb4.freq, 0, Gb4.freq, Ab4.freq, Bb4.freq, 0,
                             Db5.freq, Eb5.freq, 0, Gb5.freq, Ab5.freq, Bb5.freq,];
 
-let whiteNotesNames = [C4.name, D4.name, E4.name, F4.name, G4.name, A4.name, B4.name,
-                       C5.name, D5.name, E5.name, F5.name, G5.name, A5.name, B5.name,];
+let whiteNotesKeyNames = [C4.keyName, D4.keyName, E4.keyName, F4.keyName, G4.keyName, A4.keyName, B4.keyName,
+                       C5.keyName, D5.keyName, E5.keyName, F5.keyName, G5.keyName, A5.keyName, B5.keyName,];
 
-let blackNotesNames = [Db4.name, Eb4.name, 0, Gb4.name, Ab4.name, Bb4.name, 0,
-                       Db5.name, Eb5.name, 0, Gb5.name, Ab5.name, Bb5.name,];
+let blackNotesKeyNames = [Db4.keyName, Eb4.keyName, 0, Gb4.keyName, Ab4.keyName, Bb4.keyName, 0,
+                       Db5.keyName, Eb5.keyName, 0, Gb5.keyName, Ab5.keyName, Bb5.keyName,];
 
 let whiteNotesKeys = [C4.keyCode, D4.keyCode, E4.keyCode, F4.keyCode, G4.keyCode, A4.keyCode, B4.keyCode,
                       C5.keyCode, D5.keyCode, E5.keyCode, F5.keyCode, G5.keyCode, A5.keyCode, B5.keyCode,];
@@ -113,7 +97,7 @@ function draw() {
   
         document.querySelectorAll('.whitenotes, .blacknotes').forEach(function(element) {
         
-          element.addEventListener('mousedown', notePressed, false);
+          element.addEventListener('mousedown', notePressed, false); // повторить про false
           element.addEventListener('mouseup', noteReleased, false);
           element.addEventListener('mouseover', notePressed, false);
           element.addEventListener('mouseout', noteReleased, false);
@@ -121,10 +105,6 @@ function draw() {
           element.addEventListener('touchend', noteReleased, false);
           element.addEventListener('touchmove', notePressedByTouch, false);
 
-
-
-
-        
           return element;   // ???
 
         }); 
@@ -152,21 +132,22 @@ function playTone(freq) {
 function notePressed (event) { 
     
     if (event.buttons & 1) {                    //разобраться
-      let dataset = event.target.dataset;
-      event.target.classList.add('active');
-    
-
+       let dataset = event.target.dataset;
+     
      if (!dataset["pressed"]) {
-       oscList[dataset["freq"]] = playTone(dataset["freq"]);
+       event.target.classList.add('active');
+       oscList[dataset["freq"]] = playTone(dataset["freq"]);  //??
        dataset["pressed"] = "yes";
      } 
-   }
+   } 
+
 }
 
 function noteReleased (event) {
   let dataset = event.target.dataset;
-  event.target.classList.remove('active');
+  
   if (dataset && dataset["pressed"]) {
+    event.target.classList.remove('active');
     oscList[dataset["freq"]].stop();
     delete dataset["pressed"];  
   } 
@@ -175,162 +156,46 @@ function noteReleased (event) {
 
 function notePressedByTouch (event) { 
     let dataset = event.target.dataset;
-    event.target.classList.add('active');
-  
-
+   
    if (!dataset["pressed"]) {
+     event.target.classList.add('active');
      oscList[dataset["freq"]] = playTone(dataset["freq"]);
      dataset["pressed"] = "yes";
    } 
  
 }
 
+      
+document.addEventListener('keydown', activePress);
+document.addEventListener('keyup', removeActivePress);
 
-
-
-
-/*
        // ВЫДЕЛЕНИЕ ПРИ НАЖАТИИ КЛАВИШ 
        function activePress () {
-        document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]').classList.add('active');
-      }
+        if (whiteNotesKeys.includes(event.code) || blackNotesKeys.includes(event.code)) {
+        let pressedElement = document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]');
+        
+        let dataset = pressedElement.dataset;
+
+        if (!dataset["pressed"]) {
+          pressedElement.classList.add('active');
+          oscList[dataset["freq"]] = playTone(dataset["freq"]);
+          dataset["pressed"] = "yes";
+        }
+      }    
+    }
 
       function removeActivePress () {
-        document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]').classList.remove('active');
+        if (whiteNotesKeys.includes(event.code) || blackNotesKeys.includes(event.code)) {
+        let releasedElement = document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]');
+        let dataset = releasedElement.dataset;
+        
+        if (dataset["pressed"]) {
+        releasedElement.classList.remove('active');
+        oscList[dataset["freq"]].stop();
+        delete dataset["pressed"];
+        }
       }
-
- 
-
-
-
-      document.addEventListener('keydown', function(event){
-        switch (event.code) {
-          case C4.keyCode : playTone(C4.freq);
-          activePress();
-            break;
-          case Db4.keyCode : playTone(Db4.freq);
-          activePress();
-            break;
-          case D4.keyCode : playTone(D4.freq);
-          activePress();
-            break;
-          case Eb4.keyCode : Play.play(Eb4.freq);
-          activePress();
-            break;
-          case E4.keyCode : Play.play(E4.freq);
-          activePress();
-            break;
-          case F4.keyCode : Play.play(F4.freq);
-          activePress();
-            break;
-          case Gb4.keyCode : Play.play(Gb4.freq);
-          activePress();
-            break;
-          case G4.keyCode : Play.play(G4.freq);
-          activePress();
-            break;
-          case Ab4.keyCode : Play.play(Ab4.freq);
-          activePress();
-            break;
-          case A4.keyCode : Play.play(A4.freq);
-          activePress();
-            break; 
-          case B4.keyCode : Play.play(B4.freq);
-          activePress();
-            break;
-          default : return;                          //поковырять
-        }
-  });
-      document.addEventListener('keyup', function(event){
-  
-        switch (event.code) {
-          case C4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case Db4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case D4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case Eb4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case E4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case F4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case Gb4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case G4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case Ab4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          case A4.keyCode : Play.stop();
-          removeActivePress()
-            break; 
-          case B4.keyCode : Play.stop();
-          removeActivePress()
-            break;
-          default : return;                         
-        }
-  
-  });
-
-
-   
-  */   
-
-
- 
-
-
-
-
-// function playNow(){
-
-
-//     Play.play(this.dataset.note);   // берет частоту из dataset элемента
-//     event.stopPropagation();        
-//     //localStorage.setItem(`currentFreq`, `${this.dataset.note}`);
-// }
-
-// function stopNow(){
-
-    
-//     Play.stop();
-    
-
-// }
-
+    }
 
 
     
-
-
-
-
-
-//function noteDown(elem){
- //   let currentNote = elem.dataset.note;
- //   alert(currentNote);
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
