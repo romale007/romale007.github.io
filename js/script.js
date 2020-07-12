@@ -2,24 +2,26 @@
  
 
 var AudioContext = window.AudioContext || window.webkitAudioContext; // обращаемся к глобальному аудио контексту
-
 let audioCtx = new AudioContext();   
 
-let oscList = [];
+//  МАССИВ В КОТОРЫЙ БУДЕТ ПОМЕЩАТЬСЯ ЧАСТОТА ИЗ dataset АКТИВНОГО ЭЛЕМЕНТА
+
+let oscList = []; 
 
 
-// создаём класс Нота, свойствa - частота (Гц), 
+// СОЗДАЁМ КЛАСС НОТА СО СВОЙСТВАМИ: ЧАСТОТА, НАЗВАНИЕ КЛАВИШИ, КОД КЛАВИШИ
 
 class Note {
-    constructor(freq, keyName, keyCode) {
-        this.freq = freq;
-        this.keyName = keyName;
-        this.keyCode = keyCode;
+  constructor(freq, keyName, keyCode) {
+    
+    this.freq = freq;
+    this.keyName = keyName;
+    this.keyCode = keyCode;
     }
 
-  }
+}
 
-// создаём объекты - Ноты
+// СОЗДАЁМ ОБЪЕКТЫ - НОТЫ
 
 const C4 = new Note(261.63, "Q", "KeyQ");
 const Db4 = new Note(277.18, "2", "Digit2");
@@ -48,9 +50,7 @@ const Bb5 = new Note(932.33, ";", "Semicolon");
 const B5 = new Note(987.77, "/", "Slash");
 
 
-
-
-// Создаём массив с частотами нот
+// СОЗДАЁМ МАССИВЫ СО СВОЙСТВАМИ ОБЪЕКТОВ, ДЛЯ ПРИВЯЗКИ В dataset ЭЛЕМЕНТОВ
 
 let whiteNotesFrequencies = [C4.freq, D4.freq, E4.freq, F4.freq, G4.freq, A4.freq, B4.freq,
                              C5.freq, D5.freq, E5.freq, F5.freq, G5.freq, A5.freq, B5.freq,];
@@ -71,7 +71,7 @@ let blackNotesKeys = [Db4.keyCode, Eb4.keyCode, 0, Gb4.keyCode, Ab4.keyCode, Bb4
                       Db5.keyCode, Eb5.keyCode, 0, Gb5.keyCode, Ab5.keyCode, Bb5.keyCode,];
 
 
-//рисуем клавиши c помощью цикла
+//РИСУЕМ КЛАВИШИ С ПОМОЩЬЮ ЦИКЛА
 
 function draw() {                    
     let html = "";
@@ -84,37 +84,41 @@ function draw() {
         if (noteFreq == 329.63 || noteFreq == 493.88 || noteFreq == 659.26 || noteFreq == 987.77) 
         flag = false;
         // через dataset назначаем клавишам-нотам их частоты из массивов     
-        html +=`<div  class = "whitenotes" data-freq='${whiteNotesFrequencies[i]}' data-key='${whiteNotesKeys[i]}'>`;                
+        html +=`<div  class = "whitenotes" data-freq='${whiteNotesFrequencies[i]}' data-key='${whiteNotesKeys[i]}'> ${whiteNotesKeyNames[i]}`;                
         
         if (flag) {
-        html +=`<div  class = "blacknotes" data-freq='${blackNotesFrequencies[i]}' data-key='${blackNotesKeys[i]}'></div>`;
+        html +=`<div  class = "blacknotes" data-freq='${blackNotesFrequencies[i]}' data-key='${blackNotesKeys[i]}'>${blackNotesKeyNames[i]}</div>`;
     }
 
         html +='</div>';
     }
     
-        box.innerHTML = html;
-  
-        document.querySelectorAll('.whitenotes, .blacknotes').forEach(function(element) {
-        
-          element.addEventListener('mousedown', notePressed, false); // повторить про false
-          element.addEventListener('mouseup', noteReleased, false);
-          element.addEventListener('mouseover', notePressed, false);
-          element.addEventListener('mouseout', noteReleased, false);
-          element.addEventListener('touchstart', notePressedByTouch, false);
-          element.addEventListener('touchend', noteReleased, false);
-          element.addEventListener('touchmove', notePressedByTouch, false);
-
-          return element;   // ???
-
-        }); 
-            
-  
+        box.innerHTML = html; 
 }
  
 draw(); 
 
-function playTone(freq) {
+// СОЗДАЁМ СЛУШАТЕЛЕЙ СОБЫТИЙ МЫШКИ И КАСАНИЯ
+
+  document.querySelectorAll('.whitenotes, .blacknotes').forEach(function(element) {
+        
+  element.addEventListener('mousedown', notePressed, false); // повторить про false
+  element.addEventListener('mouseup', noteReleased, false);
+  element.addEventListener('mouseover', notePressed, false);
+  element.addEventListener('mouseout', noteReleased, false);
+  element.addEventListener('touchstart', notePressedByTouch, false);
+  element.addEventListener('touchend', noteReleased, false);
+  element.addEventListener('touchmove', notePressedByTouch, false);
+
+  //return element;   // ???
+
+}); 
+
+
+// СОЗДАЁМ ФУНКЦИЮ, КОТОРАЯ БУДЕТ СОБИРАТЬ ЦЕПЬ osc => gainNode => destination 
+// И ЗАПУСКАТЬ ОСЦИЛЯТОР ПРИ КАЖДОМ НАЖАТИИ НА ЭЛЕМЕНТ
+
+function play(freq) {
   
   let osc = audioCtx.createOscillator();
   let gainNode = audioCtx.createGain();
@@ -128,6 +132,7 @@ function playTone(freq) {
 
 }
  
+// 
 
 function notePressed (event) { 
     
@@ -136,7 +141,7 @@ function notePressed (event) {
      
      if (!dataset["pressed"]) {
        event.target.classList.add('active');
-       oscList[dataset["freq"]] = playTone(dataset["freq"]);  //??
+       oscList[dataset["freq"]] = play(dataset["freq"]);  //??
        dataset["pressed"] = "yes";
      } 
    } 
@@ -159,26 +164,28 @@ function notePressedByTouch (event) {
    
    if (!dataset["pressed"]) {
      event.target.classList.add('active');
-     oscList[dataset["freq"]] = playTone(dataset["freq"]);
+     oscList[dataset["freq"]] = play(dataset["freq"]);
      dataset["pressed"] = "yes";
    } 
  
 }
 
-      
+
+       // ВЫДЕЛЕНИЕ ПРИ НАЖАТИИ КЛАВИШ 
+
 document.addEventListener('keydown', activePress);
 document.addEventListener('keyup', removeActivePress);
 
-       // ВЫДЕЛЕНИЕ ПРИ НАЖАТИИ КЛАВИШ 
+
        function activePress () {
         if (whiteNotesKeys.includes(event.code) || blackNotesKeys.includes(event.code)) {
-        let pressedElement = document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]');
+        let pressedElement = document.querySelector(`#box .whitenotes[data-key ='${event.code}'], .blacknotes[data-key ='${event.code}']`);
         
         let dataset = pressedElement.dataset;
 
         if (!dataset["pressed"]) {
           pressedElement.classList.add('active');
-          oscList[dataset["freq"]] = playTone(dataset["freq"]);
+          oscList[dataset["freq"]] = play(dataset["freq"]);
           dataset["pressed"] = "yes";
         }
       }    
@@ -186,9 +193,9 @@ document.addEventListener('keyup', removeActivePress);
 
       function removeActivePress () {
         if (whiteNotesKeys.includes(event.code) || blackNotesKeys.includes(event.code)) {
-        let releasedElement = document.querySelector('#box .whitenotes[data-key ="'+event.code+'"], .blacknotes[data-key ="'+event.code+'"]');
-        let dataset = releasedElement.dataset;
+        let releasedElement = document.querySelector(`#box .whitenotes[data-key ='${event.code}'], .blacknotes[data-key ='${event.code}']`);
         
+        let dataset = releasedElement.dataset;
         if (dataset["pressed"]) {
         releasedElement.classList.remove('active');
         oscList[dataset["freq"]].stop();
