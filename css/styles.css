@@ -3,7 +3,8 @@
     padding: 0;
     box-sizing: border-box;
    }
-   body {
+
+body {
     background-color: lightsteelblue;
    }
 
@@ -31,6 +32,9 @@
     font-weight: bold; 
     align-items: flex-end;
     color: darkblue; 
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    
     
     
 }
@@ -49,6 +53,8 @@
     display: flex;
     align-items:flex-end; 
     border: 1px solid teal;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
     
 }
 
