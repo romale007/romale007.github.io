@@ -1,16 +1,244 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>JSynth</title>
-    <link rel="stylesheet" href = "css/styles.css">
-</head>
-<body>
+<html lang="en">
 
-    <div id='box'>
-        
-    </div>
-    <script src='js/script.js'></script>  
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=ba994d74-1acb-46d7-a398-f7c5eceaa44d&lang=ru_RU"
+    type="text/javascript"></script>
+  <title>AgMap</title>
+</head>
+
+<body>
+  <header></header>
+  <main>
+    <h1>Дома, входящие в окргуг</h1>
+    <table id="list">
+      <tr>
+        <th>Улица</th>
+        <th>Дом</th>
+        <th>Номер дома</th>
+        <th>Кол-во квартир</th>
+      </tr>
+    </table>
+    <h1>Размещение на карте</h1>
+    <div id="map" style="width: 100%; height: 600px;"></div>
+  </main>
+  <script>
+    "use strict";
+
+
+
+    const city = 'Нижний Новгород';
+
+    const luganskaya = [
+      {
+        street: 'Луганская',
+        nr: '1',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+      {
+        street: 'Луганская',
+        nr: '2A',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+      {
+        street: 'Луганская',
+        nr: '3',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+      {
+        street: 'Луганская',
+        nr: '4A',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+      {
+        street: 'Луганская',
+        nr: '5',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+      {
+        street: 'Луганская',
+        nr: '6',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+      {
+        street: 'Луганская',
+        nr: '7',
+        appartments: 170,
+        entrances: 2,
+        coveredTimes: 1,
+        remarks: '',
+      },
+    ]
+
+
+    let myMap;
+    let lastHouse = false;
+
+    ymaps.ready(init)
+
+    function init() {
+      myMap = new ymaps.Map(
+        "map",
+        {
+          center: [56.268, 43.985],
+          zoom: 16,
+          controls: [
+            "zoomControl", // ?
+            "rulerControl", // ?
+            "typeSelector", // ?
+          ],
+        },
+        {
+          supperssMapOpenBlock: true,
+        }
+      );
+
+      luganskaya.forEach((item, index) => {
+        if (index === (luganskaya.length - 1)) {
+          lastHouse = true;
+        }
+        geocodeMember(item);
+      });
+    }
+
+
+    const geocodeMember = (member) => {
+      //console.log(member)
+
+      let address = `${city} ${member.street} ${member.nr}`;
+      console.log("address", address);
+
+      let XHR = new XMLHttpRequest();
+      XHR.open("GET", "https://geocode-maps.yandex.ru/1.x/?apikey=ba994d74-1acb-46d7-a398-f7c5eceaa44d&format=json&geocode=" + address);
+      XHR.responseType = "json";
+      XHR.onload = function () {
+        let status = XHR.status;
+        if (status !== 200) {
+          console.log("status: ", status);
+          return;
+        }
+        //console.log("XHR response ", XHR.response);
+
+        try {
+          console.log("CHECK");
+          // console.log("geoObj elem-s q-ty", XHR.response.response.GeoObjectCollection.featureMember)
+          // console.log("member", member.name.last)
+          if (XHR.response.response.GeoObjectCollection.featureMember.length
+            && XHR.response.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos) {
+            console.log("GET COORDS");
+            let coordinates = XHR.response.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(" ");
+            console.log(coordinates);
+            member.point = {
+              coordinates: {
+                lat: coordinates[1], //внимательно, может переделать
+                lon: coordinates[0],
+              },
+            };
+            //console.log(member);
+            placeMemberOnMap(member);
+
+          } else {
+            console.log(`Не могу получить координаты для адреса ${address}`);
+          }
+        } catch (exception) {
+          console.log("Geocode exception", exception);
+        }
+      };
+
+      XHR.send();
+
+      XHR.onerror = () => {
+        console.log(
+          `При попытке геокодировать адрес ${address} произошла ошибка.`
+        );
+      };
+    }
+
+    const placeMemberOnMap = member => {
+      let iconContent = `${member.street} ${member.nr}`;
+      let memberPoint = new ymaps.GeoObject(
+        {
+          geometry: {
+            type: "Point",
+            coordinates: [
+              member.point.coordinates.lat,
+              member.point.coordinates.lon,
+            ],
+          },
+          properties: {
+            iconContent: iconContent,
+            hintContent: member.point.address,
+            balloonContentBody: `<h3>${member.street} ${member.nr}</h3>`
+            //member: member
+          },
+        },
+        {
+          preset: "islands#blackStretchyIcon",
+        });
+
+      myMap.geoObjects.add(memberPoint);
+
+      if (lastHouse) {
+        mуMap.setBounds(myMap.geoObjects.getBounds()); // для центровки и зума (чтобы все точки были видны)
+      }
+    };
+
+    // nameList.sort((bottomItem, upperItem) => {
+    //   if (bottomItem.name.last === upperItem.name.last) {
+    //     if (bottomItem.name.first > upperItem.name.first) return -1;
+    //     else return 0;
+    //   } else if (bottomItem.name.last < upperItem.name.last) return -1;
+    //   return 0;
+    // });
+
+    // let listEl = document.querySelector("#list");
+
+    // nameList.forEach((item) => {
+    //   let rowEl = document.createElement("tr");
+
+    //   let fioEl = document.createElement("td");
+    //   fioEl.innerText = `${item.name.last} ${item.name.first}`.trim();
+    //   rowEl.appendChild(fioEl);
+
+    //   let dobEl = document.createElement("td");
+    //   dobEl.innerText = item.birthday === "" ? "unknown" : item.birthday;
+    //   rowEl.appendChild(dobEl);
+
+    //   let sexEl = document.createElement("td");
+    //   sexEl.innerText =
+    //     item.sex === "m" ? "M" : item.sex === "f" ? "Ж" : "unknown";
+    //   rowEl.appendChild(sexEl);
+
+    //   let addressEl = document.createElement("td");
+    //   addressEl.innerText =
+    //     item.point.address === "" ? "неизвестно" : item.point.address;
+    //   rowEl.appendChild(addressEl);
+
+    //   listEl.appendChild(rowEl);
+    // });
+  </script>
+
 </body>
+
 </html>
